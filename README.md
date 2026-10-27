@@ -122,10 +122,10 @@ Table `todos` with partition key `userId` (String) and sort key `todoId` (String
 ![01-dynamodb-table](docs/images/screenshots/01-dynamodb-table.png)
 
 ### Step 2. IAM role for Lambda
-Role `todo-lambda-role`, trusted by `lambda.amazonaws.com` (`policies/lambda-trust-policy.json`), with:
+Role `todo-lambda-role`, trusted by `lambda.amazonaws.com` (`infra/iam/lambda-trust-policy.json`), with:
 
 - `AWSLambdaBasicExecutionRole` (AWS managed): writes logs to CloudWatch.
-- Inline policy `todo-dynamodb-access`: `GetItem`, `PutItem`, `UpdateItem`, `DeleteItem` and `Query` on the `todos` table and its indexes (`policies/todo-dynamodb-access.json`). The final policy file includes both `table/todos` and `table/todos/index/*`. If reproducing the setup chronologically, add the index ARN permission when you create the GSI in Step 15; without it, the GSI query fails with `AccessDenied`.
+- Inline policy `todo-dynamodb-access`: `GetItem`, `PutItem`, `UpdateItem`, `DeleteItem` and `Query` on the `todos` table and its indexes (`infra/iam/todo-dynamodb-access.json`). The final policy file includes both `table/todos` and `table/todos/index/*`. If reproducing the setup chronologically, add the index ARN permission when you create the GSI in Step 15; without it, the GSI query fails with `AccessDenied`.
 - `AWSLambdaTracerAccessExecutionRole-…` (customer managed): created when X-Ray was enabled (Step 8).
 
 
@@ -133,12 +133,12 @@ Role `todo-lambda-role`, trusted by `lambda.amazonaws.com` (`policies/lambda-tru
 ![02-iam-role-permissions](docs/images/screenshots/02-iam-role-permissions.png)
 
 ### Step 3. Lambda function `todo-api`
-Python function (`backend/lambda_function.py`) with `TABLE_NAME=todos`, running as `todo-lambda-role`.
+Python function (`src/backend/lambda/lambda_function.py`) with `TABLE_NAME=todos`, running as `todo-lambda-role`.
 
 - Reads the user ID from `event["requestContext"]["authorizer"]["claims"]["sub"]`. Without it, it returns `401`.
 - `POST` creates an item (title required, `201`), `PUT` updates `title` and `done`, `DELETE` removes an item. `PUT` and `DELETE` use `attribute_exists(todoId)`, so an unknown ID returns `404`.
 - Every response carries the CORS headers. Invalid JSON returns `400`, DynamoDB errors return `500` and are logged.
-- API Gateway may invoke the function through the resource policy in `policies/lambda-resource-policy.json` (one statement per method, scoped to the API's source ARN).
+- API Gateway may invoke the function through the resource policy in `infra/iam/lambda-resource-policy.json` (one statement per method, scoped to the API's source ARN).
 
 
 
@@ -148,7 +148,7 @@ Python function (`backend/lambda_function.py`) with `TABLE_NAME=todos`, running 
 ![03d-lambda-xray-permissions](docs/images/screenshots/03d-lambda-xray-permissions.png)
 
 ### Step 4. Test the function with test events
-The events are in `tests/test_events.json` (replace `PASTE-TODO-ID` with the ID returned by `create-todo`).
+The events are in `tests/events/` (replace `PASTE-TODO-ID` in `update-todo.json` and `delete-todo.json` with the ID returned by `create-todo.json`).
 
 | Event | Result | Proves |
 |---|---|---|
@@ -225,7 +225,7 @@ Result: `401 UnauthorizedException` without the token, `200` with the user's ite
 
 ### Step 8. Tracing, logging and alarm
 - **X-Ray:** active tracing on the Lambda function (Lambda service traces enabled) and on the API stage. The trace list shows three nodes: `todo-api` (Lambda context), `todo-api` (Lambda function) and `todo-api/prod` (API Gateway stage).
-- **Logging:** the API stage logs errors only. API Gateway writes to CloudWatch through a role trusted by `apigateway.amazonaws.com` (`policies/apigateway-logs-trust-policy.json`). Lambda logs go to `/aws/lambda/todo-api`.
+- **Logging:** the API stage logs errors only. API Gateway writes to CloudWatch through a role trusted by `apigateway.amazonaws.com` (`infra/api-gateway/apigateway-logs-trust-policy.json`). Lambda logs go to `/aws/lambda/todo-api`.
 - **Alarm:** `todo-api-errors` triggers on `Errors >= 1` for 1 datapoint within 5 minutes. It has no notification action.
 
 
@@ -235,7 +235,7 @@ Result: `401 UnauthorizedException` without the token, `200` with the user's ite
 ![25-cloudwatch-alarm](docs/images/screenshots/25-cloudwatch-alarm.png)
 
 ### Step 9. AWS WAF
-Regional web ACL `todo-api-waf` in Stockholm, default action Allow, associated with the `prod` stage (`policies/waf-rules.json`):
+Regional web ACL `todo-api-waf` in Stockholm, default action Allow, associated with the `prod` stage (`infra/waf/waf-rules.json`):
 
 | Priority | Rule | Action | Details |
 |---|---|---|---|
@@ -274,9 +274,9 @@ Calls 2 and 3 were much faster. A warm Lambda and an open connection also reduce
 ![31-api-cache-test](docs/images/screenshots/31-api-cache-test.png)
 
 ### Step 11. S3 bucket for the frontend
-Bucket `todo-web-marwen-2026` with **Block all public access** on and one object, `index.html` (5.2 KB). The bucket policy only lets the CloudFront service principal read objects, and only for this distribution (`policies/s3-bucket-policy.json`).
+Bucket `todo-web-marwen-2026` with **Block all public access** on and one object, `index.html` (5.2 KB). The bucket policy only lets the CloudFront service principal read objects, and only for this distribution (`infra/s3/s3-bucket-policy.json`).
 
-`frontend/index.html` is a single page with a sign-in form and the to-do list. It signs in with the Cognito `InitiateAuth` call, keeps the ID token in `sessionStorage` and sends it in the `Authorization` header. Set `API_URL` (`https://<CLOUDFRONT_DOMAIN>/prod`) and `CLIENT_ID` before uploading.
+`src/frontend/index.html` is a single page with a sign-in form and the to-do list. It signs in with the Cognito `InitiateAuth` call, keeps the ID token in `sessionStorage` and sends it in the `Authorization` header. Set `API_URL` (`https://<CLOUDFRONT_DOMAIN>/prod`) and `CLIENT_ID` before uploading.
 
 
 
@@ -343,7 +343,7 @@ The IAM policy now lists both `table/todos` and `table/todos/index/*`. Without t
 
 ### Step 16. DynamoDB Streams with a consumer Lambda
 1. Stream enabled on `todos` with view type **new and old images**.
-2. Lambda `todo-stream-processor` (`backend/stream_processor.py`) logs the action (`INSERT`, `MODIFY`, `REMOVE`) and the item keys. Its role has the basic logging policy (scoped to its own log group) and `AWSLambdaDynamoDBExecutionRole`.
+2. Lambda `todo-stream-processor` (`src/backend/lambda/stream_processor.py`) logs the action (`INSERT`, `MODIFY`, `REMOVE`) and the item keys. Its role has the basic logging policy (scoped to its own log group) and `AWSLambdaDynamoDBExecutionRole`.
 3. Trigger: DynamoDB `todos`, batch size 100, no batch window, starting position `LATEST`.
 4. Test: add, tick twice and delete a to-do. The logs show `INSERT`, `MODIFY`, `MODIFY`, `REMOVE` for the same `todoId`, and the trigger reports **Last processing result: OK**.
 
