@@ -6,9 +6,13 @@ A serverless to-do application on AWS. Users sign in with Amazon Cognito and cal
 
 ![Architecture](docs/architecture/Architecture.png)
 
+
 ---
 
 ## 1. Architecture
+## Demo
+
+[![Watch the demo](docs/images/screenshots/21a-frontend-todo-list.png)](docs/video/demo.mp4)
 
 | Layer | Service | Role |
 |---|---|---|
@@ -77,8 +81,10 @@ Names are case-sensitive (`userId`, not `userID`).
 │   ├── architecture/
 │   │   ├── architecture.md
 │   │   └── Architecture.png
-│   └── images/
-│       └── screenshots/
+│   ├── images/
+│   │   └── screenshots/
+│   └── video/
+│       └── demo.mp4
 ├── infra/
 │   ├── api-gateway/
 │   │   └── apigateway-logs-trust-policy.json
