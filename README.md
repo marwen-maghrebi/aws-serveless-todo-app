@@ -4,7 +4,7 @@ A serverless to-do application on AWS. Users sign in with Amazon Cognito and cal
 
 **Region:** Europe (Stockholm), `eu-north-1` · **Built:** October 25–26, 2026
 
-![Architecture](architecture/Architecture.png)
+![Architecture](docs/architecture/Architecture.png)
 
 ---
 
@@ -88,7 +88,7 @@ Names are case-sensitive (`userId`, not `userID`).
 │   └── waf-rules.json                # rate-limit, common rule set, geo-block
 ├── tests/
 │   └── test_events.json              # Lambda test events
-└── screenshots/
+└── docs/images/screenshots/
 ```
 
 Before deployment, replace `<ACCOUNT_ID>`, `<API_ID>`, `<DISTRIBUTION_ID>`, `<CLOUDFRONT_DOMAIN>` and `<APP_CLIENT_ID>` wherever they appear in the policy files and frontend configuration. Use your own resource values, and never commit credentials, tokens, passwords or other secrets. Resource identifiers are not all secrets, but avoid publishing account-specific values if you do not want them public.
@@ -102,7 +102,7 @@ Table `todos` with partition key `userId` (String) and sort key `todoId` (String
 
 
 
-![01-dynamodb-table](screenshots/01-dynamodb-table.png)
+![01-dynamodb-table](docs/images/screenshots/01-dynamodb-table.png)
 
 ### Step 2. IAM role for Lambda
 Role `todo-lambda-role`, trusted by `lambda.amazonaws.com` (`policies/lambda-trust-policy.json`), with:
@@ -113,7 +113,7 @@ Role `todo-lambda-role`, trusted by `lambda.amazonaws.com` (`policies/lambda-tru
 
 
 
-![02-iam-role-permissions](screenshots/02-iam-role-permissions.png)
+![02-iam-role-permissions](docs/images/screenshots/02-iam-role-permissions.png)
 
 ### Step 3. Lambda function `todo-api`
 Python function (`backend/lambda_function.py`) with `TABLE_NAME=todos`, running as `todo-lambda-role`.
@@ -125,10 +125,10 @@ Python function (`backend/lambda_function.py`) with `TABLE_NAME=todos`, running 
 
 
 
-![03-lambda-config](screenshots/03-lambda-config.png)
-![03b-lambda-permissions](screenshots/03b-lambda-permissions.png)
-![03c-lambda-dynamodb-permissions](screenshots/03c-lambda-dynamodb-permissions.png)
-![03d-lambda-xray-permissions](screenshots/03d-lambda-xray-permissions.png)
+![03-lambda-config](docs/images/screenshots/03-lambda-config.png)
+![03b-lambda-permissions](docs/images/screenshots/03b-lambda-permissions.png)
+![03c-lambda-dynamodb-permissions](docs/images/screenshots/03c-lambda-dynamodb-permissions.png)
+![03d-lambda-xray-permissions](docs/images/screenshots/03d-lambda-xray-permissions.png)
 
 ### Step 4. Test the function with test events
 The events are in `tests/test_events.json` (replace `PASTE-TODO-ID` with the ID returned by `create-todo`).
@@ -144,12 +144,12 @@ The events are in `tests/test_events.json` (replace `PASTE-TODO-ID` with the ID 
 
 
 
-![04-lambda-create-201](screenshots/04-lambda-create-201.png)
-![05-lambda-list-200](screenshots/05-lambda-list-200.png)
-![06-lambda-no-auth-401](screenshots/06-lambda-no-auth-401.png)
-![07-lambda-user-isolation](screenshots/07-lambda-user-isolation.png)
-![08-lambda-update-200](screenshots/08-lambda-update-200.png)
-![09-lambda-delete-200](screenshots/09-lambda-delete-200.png)
+![04-lambda-create-201](docs/images/screenshots/04-lambda-create-201.png)
+![05-lambda-list-200](docs/images/screenshots/05-lambda-list-200.png)
+![06-lambda-no-auth-401](docs/images/screenshots/06-lambda-no-auth-401.png)
+![07-lambda-user-isolation](docs/images/screenshots/07-lambda-user-isolation.png)
+![08-lambda-update-200](docs/images/screenshots/08-lambda-update-200.png)
+![09-lambda-delete-200](docs/images/screenshots/09-lambda-delete-200.png)
 
 ### Step 5. Cognito user pool
 User pool with sign-in by email, self-registration disabled and one confirmed test user (email verified). App client `todo-web`:
@@ -161,8 +161,8 @@ User pool with sign-in by email, self-registration disabled and one confirmed te
 
 
 
-![13-cognito-app-client](screenshots/13-cognito-app-client.png)
-![14-cognito-user](screenshots/14-cognito-user.png)
+![13-cognito-app-client](docs/images/screenshots/13-cognito-app-client.png)
+![14-cognito-user](docs/images/screenshots/14-cognito-user.png)
 
 ### Step 6. API Gateway
 REST API `todo-api` with these resources:
@@ -177,9 +177,9 @@ The authorizer `cognito-authorizer` reads the token from the `Authorization` hea
 
 
 
-![10-api-resources](screenshots/10-api-resources.png)
-![15-api-authorizer](screenshots/15-api-authorizer.png)
-![11-api-stage-prod](screenshots/11-api-stage-prod.png)
+![10-api-resources](docs/images/screenshots/10-api-resources.png)
+![15-api-authorizer](docs/images/screenshots/15-api-authorizer.png)
+![11-api-stage-prod](docs/images/screenshots/11-api-stage-prod.png)
 
 ### Step 7. Test the API
 Without a token the API returns `401`.
@@ -203,8 +203,8 @@ Result: `401 UnauthorizedException` without the token, `200` with the user's ite
 
 
 
-![12-api-unauthorized](screenshots/12-api-unauthorized.png)
-![16-api-auth-test](screenshots/16-api-auth-test.png)
+![12-api-unauthorized](docs/images/screenshots/12-api-unauthorized.png)
+![16-api-auth-test](docs/images/screenshots/16-api-auth-test.png)
 
 ### Step 8. Tracing, logging and alarm
 - **X-Ray:** active tracing on the Lambda function (Lambda service traces enabled) and on the API stage. The trace list shows three nodes: `todo-api` (Lambda context), `todo-api` (Lambda function) and `todo-api/prod` (API Gateway stage).
@@ -213,9 +213,9 @@ Result: `401 UnauthorizedException` without the token, `200` with the user's ite
 
 
 
-![23-lambda-xray](screenshots/23-lambda-xray.png)
-![26-xray-traces](screenshots/26-xray-traces.png)
-![25-cloudwatch-alarm](screenshots/25-cloudwatch-alarm.png)
+![23-lambda-xray](docs/images/screenshots/23-lambda-xray.png)
+![26-xray-traces](docs/images/screenshots/26-xray-traces.png)
+![25-cloudwatch-alarm](docs/images/screenshots/25-cloudwatch-alarm.png)
 
 ### Step 9. AWS WAF
 Regional web ACL `todo-api-waf` in Stockholm, default action Allow, associated with the `prod` stage (`policies/waf-rules.json`):
@@ -229,9 +229,9 @@ The two rules use 702 of 5,000 WCUs. A burst of test requests triggered the rate
 
 
 
-![27-waf-rules](screenshots/27-waf-rules.png)
-![28-waf-traffic](screenshots/28-waf-traffic.png)
-![28b-waf-traffic-characteristics](screenshots/28b-waf-traffic-characteristics.png)
+![27-waf-rules](docs/images/screenshots/27-waf-rules.png)
+![28-waf-traffic](docs/images/screenshots/28-waf-traffic.png)
+![28b-waf-traffic-characteristics](docs/images/screenshots/28b-waf-traffic-characteristics.png)
 
 ### Step 10. API Gateway caching
 A cache cluster was provisioned on the stage and three identical calls were timed from CloudShell:
@@ -253,8 +253,8 @@ Calls 2 and 3 were much faster. A warm Lambda and an open connection also reduce
 
 
 
-![30-api-cache-provisioned](screenshots/30-api-cache-provisioned.png)
-![31-api-cache-test](screenshots/31-api-cache-test.png)
+![30-api-cache-provisioned](docs/images/screenshots/30-api-cache-provisioned.png)
+![31-api-cache-test](docs/images/screenshots/31-api-cache-test.png)
 
 ### Step 11. S3 bucket for the frontend
 Bucket `todo-web-marwen-2026` with **Block all public access** on and one object, `index.html` (5.2 KB). The bucket policy only lets the CloudFront service principal read objects, and only for this distribution (`policies/s3-bucket-policy.json`).
@@ -263,8 +263,8 @@ Bucket `todo-web-marwen-2026` with **Block all public access** on and one object
 
 
 
-![17-s3-private-bucket](screenshots/17-s3-private-bucket.png)
-![17b-s3-block-public-access](screenshots/17b-s3-block-public-access.png)
+![17-s3-private-bucket](docs/images/screenshots/17-s3-private-bucket.png)
+![17b-s3-block-public-access](docs/images/screenshots/17b-s3-block-public-access.png)
 
 ### Step 12. CloudFront
 Distribution `todo-web`: all edge locations, HTTP/2 and HTTP/1.1, default root object `index.html`, logging off.
@@ -281,29 +281,29 @@ Distribution `todo-web`: all edge locations, HTTP/2 and HTTP/1.1, default root o
 
 
 
-![18-cloudfront](screenshots/18-cloudfront.png)
-![32-cloudfront-api-origin](screenshots/32-cloudfront-api-origin.png)
-![33-cloudfront-api-behavior](screenshots/33-cloudfront-api-behavior.png)
+![18-cloudfront](docs/images/screenshots/18-cloudfront.png)
+![32-cloudfront-api-origin](docs/images/screenshots/32-cloudfront-api-origin.png)
+![33-cloudfront-api-behavior](docs/images/screenshots/33-cloudfront-api-behavior.png)
 
 ### Step 13. End-to-end test
 Open the CloudFront address, sign in, then add, tick and delete to-dos. The browser network log shows `GET`, `PUT` and `DELETE` calls returning `200` and `POST` returning `201`, all on `/prod/todos` of the CloudFront domain.
 
 
 
-![20-frontend-signin](screenshots/20-frontend-signin.png)
-![20b-frontend-signin-filled](screenshots/20b-frontend-signin-filled.png)
-![21a-frontend-todo-list](screenshots/21a-frontend-todo-list.png)
-![21b-frontend-todo-list-ticked](screenshots/21b-frontend-todo-list-ticked.png)
-![22-frontend-network-200](screenshots/22-frontend-network-200.png)
-![34-cloudfront-api-network](screenshots/34-cloudfront-api-network.png)
+![20-frontend-signin](docs/images/screenshots/20-frontend-signin.png)
+![20b-frontend-signin-filled](docs/images/screenshots/20b-frontend-signin-filled.png)
+![21a-frontend-todo-list](docs/images/screenshots/21a-frontend-todo-list.png)
+![21b-frontend-todo-list-ticked](docs/images/screenshots/21b-frontend-todo-list-ticked.png)
+![22-frontend-network-200](docs/images/screenshots/22-frontend-network-200.png)
+![34-cloudfront-api-network](docs/images/screenshots/34-cloudfront-api-network.png)
 
 ### Step 14. Cognito managed login (hosted UI)
 The user pool has a managed login domain with a style assigned to the app client `todo-web`. **View login page** opens the hosted sign-in form. The web page does not use it: it keeps its own form and the `InitiateAuth` call from Step 11.
 
 
 
-![38-cognito-managed-login](screenshots/38-cognito-managed-login.png)
-![39-cognito-hosted-ui](screenshots/39-cognito-hosted-ui.png)
+![38-cognito-managed-login](docs/images/screenshots/38-cognito-managed-login.png)
+![39-cognito-hosted-ui](docs/images/screenshots/39-cognito-hosted-ui.png)
 
 ### Step 15. DynamoDB GSI
 Global secondary index `userId-createdAt-index` (partition key `userId`, sort key `createdAt`, all attributes projected, on-demand). It lets `GET /todos` return a user's to-dos newest first:
@@ -320,9 +320,9 @@ The IAM policy now lists both `table/todos` and `table/todos/index/*`. Without t
 
 
 
-![40-dynamodb-gsi](screenshots/40-dynamodb-gsi.png)
-![41-iam-gsi-permission](screenshots/41-iam-gsi-permission.png)
-![42-lambda-gsi-query](screenshots/42-lambda-gsi-query.png)
+![40-dynamodb-gsi](docs/images/screenshots/40-dynamodb-gsi.png)
+![41-iam-gsi-permission](docs/images/screenshots/41-iam-gsi-permission.png)
+![42-lambda-gsi-query](docs/images/screenshots/42-lambda-gsi-query.png)
 
 ### Step 16. DynamoDB Streams with a consumer Lambda
 1. Stream enabled on `todos` with view type **new and old images**.
@@ -332,11 +332,11 @@ The IAM policy now lists both `table/todos` and `table/todos/index/*`. Without t
 
 
 
-![43-dynamodb-stream-enabled](screenshots/43-dynamodb-stream-enabled.png)
-![43b-stream-processor-role](screenshots/43b-stream-processor-role.png)
-![44-stream-trigger](screenshots/44-stream-trigger.png)
-![44b-stream-trigger-ok](screenshots/44b-stream-trigger-ok.png)
-![45-stream-logs](screenshots/45-stream-logs.png)
+![43-dynamodb-stream-enabled](docs/images/screenshots/43-dynamodb-stream-enabled.png)
+![43b-stream-processor-role](docs/images/screenshots/43b-stream-processor-role.png)
+![44-stream-trigger](docs/images/screenshots/44-stream-trigger.png)
+![44b-stream-trigger-ok](docs/images/screenshots/44b-stream-trigger-ok.png)
+![45-stream-logs](docs/images/screenshots/45-stream-logs.png)
 
 ### Step 17. WAF geo-block rule
 Rule `geo-block` (priority 2, Block) matches requests that originate from a country in the list. The list was set to Tunisia (`TN`), where the tests were run.
@@ -350,12 +350,12 @@ The different results show that the block comes from the geo rule. Over the last
 
 
 
-![46-waf-geo-rule](screenshots/46-waf-geo-rule.png)
-![46b-waf-geo-rule-json](screenshots/46b-waf-geo-rule-json.png)
-![47a-waf-geo-403](screenshots/47a-waf-geo-403.png)
-![47b-waf-geo-sweden-401](screenshots/47b-waf-geo-sweden-401.png)
-![47c-waf-geo-blocked-count](screenshots/47c-waf-geo-blocked-count.png)
-![48-waf-three-rules](screenshots/48-waf-three-rules.png)
+![46-waf-geo-rule](docs/images/screenshots/46-waf-geo-rule.png)
+![46b-waf-geo-rule-json](docs/images/screenshots/46b-waf-geo-rule-json.png)
+![47a-waf-geo-403](docs/images/screenshots/47a-waf-geo-403.png)
+![47b-waf-geo-sweden-401](docs/images/screenshots/47b-waf-geo-sweden-401.png)
+![47c-waf-geo-blocked-count](docs/images/screenshots/47c-waf-geo-blocked-count.png)
+![48-waf-three-rules](docs/images/screenshots/48-waf-three-rules.png)
 
 ### Step 18. Usage plan
 `todo-usage-plan`: 50 requests per second, burst 100, quota 10,000 requests per month, associated with `todo-api` / `prod`.
@@ -366,7 +366,7 @@ A usage plan only applies its throttling and quota to methods that require an AP
 ---
 
 
-![35-usage-plan](screenshots/35-usage-plan.png)
+![35-usage-plan](docs/images/screenshots/35-usage-plan.png)
 
 ## 5. Results against the project requirements
 
