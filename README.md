@@ -72,23 +72,40 @@ Names are case-sensitive (`userId`, not `userID`).
 .
 ├── README.md
 ├── LICENSE
-├── architecture/
-│   └── Architecture.png
-├── backend/
-│   ├── lambda_function.py            # CRUD handler (GET queries the GSI)
-│   └── stream_processor.py           # DynamoDB stream consumer
-├── frontend/
-│   └── index.html                    # placeholders for CloudFront domain and client ID
-├── policies/
-│   ├── lambda-trust-policy.json
-│   ├── apigateway-logs-trust-policy.json
-│   ├── lambda-resource-policy.json   # API Gateway may invoke todo-api
-│   ├── todo-dynamodb-access.json     # table + index permissions
-│   ├── s3-bucket-policy.json         # CloudFront-only read access
-│   └── waf-rules.json                # rate-limit, common rule set, geo-block
-├── tests/
-│   └── test_events.json              # Lambda test events
-└── docs/images/screenshots/
+├── .gitignore
+├── docs/
+│   ├── architecture/
+│   │   ├── architecture.md
+│   │   └── Architecture.png
+│   └── images/
+│       └── screenshots/
+├── infra/
+│   ├── api-gateway/
+│   │   └── apigateway-logs-trust-policy.json
+│   ├── iam/
+│   │   ├── lambda-resource-policy.json
+│   │   ├── lambda-trust-policy.json
+│   │   └── todo-dynamodb-access.json
+│   ├── s3/
+│   │   └── s3-bucket-policy.json
+│   └── waf/
+│       └── waf-rules.json
+├── src/
+│   ├── backend/
+│   │   └── lambda/
+│   │       ├── lambda_function.py
+│   │       └── stream_processor.py
+│   └── frontend/
+│       └── index.html
+└── tests/
+    └── events/
+        ├── README.md
+        ├── create-todo.json
+        ├── delete-todo.json
+        ├── list-todos.json
+        ├── list-user2.json
+        ├── no-auth.json
+        └── update-todo.json
 ```
 
 Before deployment, replace `<ACCOUNT_ID>`, `<API_ID>`, `<DISTRIBUTION_ID>`, `<CLOUDFRONT_DOMAIN>` and `<APP_CLIENT_ID>` wherever they appear in the policy files and frontend configuration. Use your own resource values, and never commit credentials, tokens, passwords or other secrets. Resource identifiers are not all secrets, but avoid publishing account-specific values if you do not want them public.
