@@ -1,0 +1,38 @@
+{
+  "Version": "2012-10-17",
+  "Id": "default",
+  "Statement": [
+    {
+      "Sid": "6c23169f-261f-520d-bbee-f80b8b4e76d3",
+      "Effect": "Allow",
+      "Principal": { "Service": "apigateway.amazonaws.com" },
+      "Action": "lambda:InvokeFunction",
+      "Resource": "arn:aws:lambda:eu-north-1:<ACCOUNT_ID>:function:todo-api",
+      "Condition": { "ArnLike": { "AWS:SourceArn": "arn:aws:execute-api:eu-north-1:<ACCOUNT_ID>:<API_ID>/*/GET/todos" } }
+    },
+    {
+      "Sid": "60bb6259-7001-5f08-96fc-2795d3ed742e",
+      "Effect": "Allow",
+      "Principal": { "Service": "apigateway.amazonaws.com" },
+      "Action": "lambda:InvokeFunction",
+      "Resource": "arn:aws:lambda:eu-north-1:<ACCOUNT_ID>:function:todo-api",
+      "Condition": { "ArnLike": { "AWS:SourceArn": "arn:aws:execute-api:eu-north-1:<ACCOUNT_ID>:<API_ID>/*/POST/todos" } }
+    },
+    {
+      "Sid": "01b3fe82-97db-537d-a983-05ebd6c4963f",
+      "Effect": "Allow",
+      "Principal": { "Service": "apigateway.amazonaws.com" },
+      "Action": "lambda:InvokeFunction",
+      "Resource": "arn:aws:lambda:eu-north-1:<ACCOUNT_ID>:function:todo-api",
+      "Condition": { "ArnLike": { "AWS:SourceArn": "arn:aws:execute-api:eu-north-1:<ACCOUNT_ID>:<API_ID>/*/PUT/todos/*" } }
+    },
+    {
+      "Sid": "43314383-6082-5b62-9f82-35325bc940a9",
+      "Effect": "Allow",
+      "Principal": { "Service": "apigateway.amazonaws.com" },
+      "Action": "lambda:InvokeFunction",
+      "Resource": "arn:aws:lambda:eu-north-1:<ACCOUNT_ID>:function:todo-api",
+      "Condition": { "ArnLike": { "AWS:SourceArn": "arn:aws:execute-api:eu-north-1:<ACCOUNT_ID>:<API_ID>/*/DELETE/todos/*" } }
+    }
+  ]
+}

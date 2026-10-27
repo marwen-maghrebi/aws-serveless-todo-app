@@ -1,0 +1,13 @@
+{
+  "httpMethod": "DELETE",
+  "pathParameters": {
+    "todoId": "PASTE-TODO-ID"
+  },
+  "requestContext": {
+    "authorizer": {
+      "claims": {
+        "sub": "test-user-1"
+      }
+    }
+  }
+}

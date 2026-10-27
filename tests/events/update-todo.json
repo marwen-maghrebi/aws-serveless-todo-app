@@ -1,0 +1,14 @@
+{
+  "httpMethod": "PUT",
+  "pathParameters": {
+    "todoId": "PASTE-TODO-ID"
+  },
+  "body": "{\"title\":\"Learn AWS\",\"done\":true}",
+  "requestContext": {
+    "authorizer": {
+      "claims": {
+        "sub": "test-user-1"
+      }
+    }
+  }
+}

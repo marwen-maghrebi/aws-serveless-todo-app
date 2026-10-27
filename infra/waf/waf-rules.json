@@ -1,0 +1,59 @@
+{
+  "Name": "todo-api-waf",
+  "DefaultAction": { "Allow": {} },
+  "VisibilityConfig": {
+    "SampledRequestsEnabled": true,
+    "CloudWatchMetricsEnabled": true,
+    "MetricName": "todo-api-waf"
+  },
+  "Rules": [
+    {
+      "Name": "rate-limit",
+      "Priority": 0,
+      "Statement": {
+        "RateBasedStatement": {
+          "Limit": 100,
+          "AggregateKeyType": "IP",
+          "EvaluationWindowSec": 300
+        }
+      },
+      "Action": { "Block": {} },
+      "VisibilityConfig": {
+        "SampledRequestsEnabled": true,
+        "CloudWatchMetricsEnabled": true,
+        "MetricName": "rate-limit"
+      }
+    },
+    {
+      "Name": "AWS-AWSManagedRulesCommonRuleSet",
+      "Priority": 1,
+      "Statement": {
+        "ManagedRuleGroupStatement": {
+          "VendorName": "AWS",
+          "Name": "AWSManagedRulesCommonRuleSet"
+        }
+      },
+      "OverrideAction": { "None": {} },
+      "VisibilityConfig": {
+        "SampledRequestsEnabled": true,
+        "CloudWatchMetricsEnabled": true,
+        "MetricName": "AWS-AWSManagedRulesCommonRuleSet"
+      }
+    },
+    {
+      "Name": "geo-block",
+      "Priority": 2,
+      "Statement": {
+        "GeoMatchStatement": {
+          "CountryCodes": ["TN"]
+        }
+      },
+      "Action": { "Block": {} },
+      "VisibilityConfig": {
+        "SampledRequestsEnabled": true,
+        "CloudWatchMetricsEnabled": true,
+        "MetricName": "geo-block"
+      }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+# Local secrets and environment configuration
+.env
+.env.*
+!.env.example
+
+# Python generated files
+__pycache__/
+*.py[cod]
+
+# Windows and macOS generated files
+Thumbs.db
+.DS_Store

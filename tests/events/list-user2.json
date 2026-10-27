@@ -1,0 +1,11 @@
+{
+  "httpMethod": "GET",
+  "pathParameters": null,
+  "requestContext": {
+    "authorizer": {
+      "claims": {
+        "sub": "test-user-2"
+      }
+    }
+  }
+}

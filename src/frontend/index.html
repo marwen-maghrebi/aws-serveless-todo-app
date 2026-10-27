@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Todo App</title>
+<link rel="icon" href="data:,">
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 560px; margin: 2rem auto; padding: 0 1rem; color: #222; }
+  h1 { font-size: 1.5rem; }
+  input, button { font-size: 1rem; padding: .5rem; }
+  input { width: 100%; box-sizing: border-box; margin-bottom: .5rem; }
+  button { cursor: pointer; }
+  .row { display: flex; gap: .5rem; }
+  .row input { margin-bottom: 0; flex: 1; }
+  ul { list-style: none; padding: 0; }
+  li { display: flex; align-items: center; gap: .5rem; padding: .5rem 0; border-bottom: 1px solid #ddd; }
+  li span { flex: 1; }
+  li.done span { text-decoration: line-through; color: #888; }
+  #msg { color: #b00020; min-height: 1.5rem; }
+  .hidden { display: none; }
+  .top { display: flex; justify-content: space-between; align-items: center; }
+</style>
+</head>
+<body>
+
+<!-- Settings: replace only if your ids change -->
+<script>
+  const API_URL   = "https://<CLOUDFRONT_DOMAIN>/prod";
+  const REGION    = "eu-north-1";
+  const CLIENT_ID = "<APP_CLIENT_ID>";
+</script>
+
+<div id="login">
+  <h1>Sign in</h1>
+  <input id="email" type="email" placeholder="Email" autocomplete="username">
+  <input id="password" type="password" placeholder="Password" autocomplete="current-password">
+  <button id="loginBtn">Sign in</button>
+</div>
+
+<div id="app" class="hidden">
+  <div class="top">
+    <h1>My to-dos</h1>
+    <button id="logoutBtn">Sign out</button>
+  </div>
+  <div class="row">
+    <input id="newTitle" placeholder="New to-do">
+    <button id="addBtn">Add</button>
+  </div>
+  <ul id="list"></ul>
+</div>
+
+<p id="msg"></p>
+
+<script>
+  let idToken = sessionStorage.getItem("idToken") || "";
+  const $ = (id) => document.getElementById(id);
+  const say = (t) => { $("msg").textContent = t || ""; };
+
+  function show() {
+    $("login").classList.toggle("hidden", !!idToken);
+    $("app").classList.toggle("hidden", !idToken);
+  }
+
+  async function signIn() {
+    say("");
+    const res = await fetch(`https://cognito-idp.${REGION}.amazonaws.com/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-amz-json-1.1",
+        "X-Amz-Target": "AWSCognitoIdentityProviderService.InitiateAuth"
+      },
+      body: JSON.stringify({
+        AuthFlow: "USER_PASSWORD_AUTH",
+        ClientId: CLIENT_ID,
+        AuthParameters: { USERNAME: $("email").value.trim(), PASSWORD: $("password").value }
+      })
+    });
+    const data = await res.json();
+    if (!res.ok || !data.AuthenticationResult) {
+      say("Sign-in failed: " + (data.message || data.__type || res.status));
+      return;
+    }
+    idToken = data.AuthenticationResult.IdToken;
+    sessionStorage.setItem("idToken", idToken);
+    $("password").value = "";
+    show();
+    loadTodos();
+  }
+
+  function signOut() {
+    idToken = "";
+    sessionStorage.removeItem("idToken");
+    $("list").innerHTML = "";
+    show();
+  }
+
+  async function api(method, path, body) {
+    const res = await fetch(API_URL + path, {
+      method,
+      headers: { "Authorization": idToken, "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    if (res.status === 401) { signOut(); say("Session expired. Please sign in again."); return null; }
+    if (!res.ok) { say("Request failed: " + res.status); return null; }
+    const text = await res.text();
+    return text ? JSON.parse(text) : {};
+  }
+
+  function render(items) {
+    const list = $("list");
+    list.innerHTML = "";
+    items.forEach((t) => {
+      const li = document.createElement("li");
+      if (t.done) li.className = "done";
+
+      const box = document.createElement("input");
+      box.type = "checkbox";
+      box.checked = !!t.done;
+      box.style.width = "auto";
+      box.style.margin = "0";
+      box.onchange = async () => {
+        await api("PUT", "/todos/" + encodeURIComponent(t.todoId), { title: t.title, done: box.checked });
+        loadTodos();
+      };
+
+      const label = document.createElement("span");
+      label.textContent = t.title;
+
+      const del = document.createElement("button");
+      del.textContent = "Delete";
+      del.onclick = async () => {
+        await api("DELETE", "/todos/" + encodeURIComponent(t.todoId));
+        loadTodos();
+      };
+
+      li.append(box, label, del);
+      list.appendChild(li);
+    });
+  }
+
+  async function loadTodos() {
+    const data = await api("GET", "/todos");
+    if (!data) return;
+    render(Array.isArray(data) ? data : (data.items || data.todos || []));
+  }
+
+  async function addTodo() {
+    const title = $("newTitle").value.trim();
+    if (!title) return;
+    const out = await api("POST", "/todos", { title });
+    if (out) { $("newTitle").value = ""; loadTodos(); }
+  }
+
+  $("loginBtn").onclick = signIn;
+  $("logoutBtn").onclick = signOut;
+  $("addBtn").onclick = addTodo;
+  $("password").addEventListener("keydown", (e) => { if (e.key === "Enter") signIn(); });
+  $("newTitle").addEventListener("keydown", (e) => { if (e.key === "Enter") addTodo(); });
+
+  show();
+  if (idToken) loadTodos();
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "httpMethod": "POST",
+  "pathParameters": null,
+  "body": "{\"title\":\"Learn AWS\"}",
+  "requestContext": {
+    "authorizer": {
+      "claims": {
+        "sub": "test-user-1"
+      }
+    }
+  }
+}

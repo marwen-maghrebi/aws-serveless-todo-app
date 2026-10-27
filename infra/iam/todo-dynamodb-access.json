@@ -1,0 +1,19 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:Query"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:eu-north-1:<ACCOUNT_ID>:table/todos",
+        "arn:aws:dynamodb:eu-north-1:<ACCOUNT_ID>:table/todos/index/*"
+      ]
+    }
+  ]
+}
