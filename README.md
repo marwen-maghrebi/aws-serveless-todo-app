@@ -10,9 +10,7 @@ A serverless to-do application on AWS. Users sign in with Amazon Cognito and cal
 ---
 
 ## 1. Architecture
-## Demo
 
-[![Watch the demo](docs/images/screenshots/21a-frontend-todo-list.png)](docs/video/demo.mp4)
 
 | Layer | Service | Role |
 |---|---|---|
@@ -25,6 +23,10 @@ A serverless to-do application on AWS. Users sign in with Amazon Cognito and cal
 | Data | DynamoDB `todos` (on-demand) | Items, GSI, Streams |
 | Events | Lambda `todo-stream-processor` | Consumes the DynamoDB stream |
 | Observability | X-Ray, CloudWatch Logs, CloudWatch alarm | Tracing, logs, error alarm |
+
+## Demo
+
+[![Watch the demo](docs/images/screenshots/21a-frontend-todo-list.png)](docs/video/demo.mp4)
 
 ### Request flow
 
